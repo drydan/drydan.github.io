@@ -1,0 +1,14 @@
+remote_theme: just-the-docs/just-the-docs
+title: "Drydan's Portfolio"
+search_enabled: false
+
+compress_html:
+  blanklines: true
+mathjax:
+  source: https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML
+  config: 'MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "AMS" } } })'
+  
+# Aux links for the upper right navigation
+# aux_links:
+#   "Just the Docs on GitHub":
+#     - "//github.com/just-the-docs/just-the-docs"

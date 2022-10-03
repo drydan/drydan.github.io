@@ -103,13 +103,13 @@ The log odds require estimating the rate parameters, which in itself calls for e
 
 It can be helpful to visualize the $$\theta_{p,k}$$'s as a set of grids for each action, seen previously with the contour plots.
 
-{:style="counter-reset:step-counter 1"}
+{:style="counter-reset:step-counter 0"}
 1. For each position and action store the counts in matrix $$M_p$$, whose rows and columns coincide to the (x,y) coordinates	
 <div class="code-example" markdown="1">
 Faceoffs are omitted for defenders. None were recorded, nor do we except them to hold any information for the position. 
 </div>
 
-{:style="counter-reset:step-counter 2"}
+{:style="counter-reset:step-counter 1"}
 2. Add the matrix corresponding to its mirrored position flipped along the $$y=0$$ entries to $$M_p$$. Add corresponding total exposure times $$N_p$$ as well.
 	$$M_{LD}'[x,y]=M_{LD}[x,y] + M_{LD}[x,-y]$$ 
 
@@ -118,7 +118,7 @@ Faceoffs are omitted for defenders. None were recorded, nor do we except them to
 This step enforces symmetry between the two positions and sets any action on the $$y=0$$ line to have zero sway. Now two shots at $$(x,-10)$$ and $$(x,10)$$ will cancel out. It has the added benefit of equating the total rates for each action, setting the terms $$\sum(\theta_{RD,k} - \theta_{LD,k}) = 0$$. If we were given an event at an undisclosed location it provides no evidence. This is a wanted consequence, as it prevents clustering based on archetypes. For example "stay at home" defenders tend to have high hit and block rates but low shooting rates. The opposite is true for "offensive" defenders. 
 </div>
 
-{:style="counter-reset:step-counter 3"}
+{:style="counter-reset:step-counter 2"}
 3. Apply a Kernel Smoothing Method to each matrix. 
 <div class="code-example" markdown="1">
 To avoid zero frequency problems we add a pseudo count of $$1 \times \frac{N_p}{N_{\text{base class}}}$$ to each count (The fraction preserves a one to one ratio after calculating rates). Afterwards a kernel smoothing method is applied to $$M_p'$$ to incorporate spatial dependency amongst $$\theta$$'s. The main idea here is to apply regularization techniques commonly found in generalized additive models while retaining the benefits of our naive bayes classifier.
@@ -126,7 +126,7 @@ To avoid zero frequency problems we add a pseudo count of $$1 \times \frac{N_p}{
 At the moment I've using a gaussian kernel with $$\sigma = 5$$ based on visual inspection. A more principled approach, such as selection through cross validation is left to future work. However, current results have been impartial to alternative choices. It will be worth looking into adaptive kernels, whose bandwidth fluctuates to accommodate sparsity. Recall our log odds formula; our aim isn't an accurate estimate of each position's rate, but of their ratio. The ratio dictates the separation of classes. When count data is sparse for either position the estimated ratio can be highly variable and our pseudo count - which in some way behaves like a prior - may have a stronger than intended effect. 
 </div>
 
-{:style="counter-reset:step-counter 4"}
+{:style="counter-reset:step-counter 3"}
 4. Obtain the rates per 60 minutes by dividing each count by exposure $$N_{p}'$$
 
 ---
@@ -719,7 +719,7 @@ You can reach me on twitter @yimmymcbill if you have suggestions!
 
 
 ![](../../assets/images/f_log_heatmaps_high_sig.jpg)
-*An example using scipy's gaussian filter with $$\sigma = 20$$.*
+*An example using Gaussian KDE with $$\sigma$$ cranking up to 20.*
 
 ![](../../assets/images/f_heatmaps.jpg)
 *The final Rates per sixty minutes for all forward positions*

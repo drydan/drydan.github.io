@@ -96,29 +96,29 @@ which determines cluster membership. A positive $$\alpha_{i,j}$$ means the playe
 
 The log odds require estimating the rate parameters, which in itself calls for existing labels. A typical solution tumbles between the two calculations, with each update hopefully bringing us closer to convergence. At the moment, we've only utilized event data. A statisfying solution will pair both event and shift sources, addressed in step 2.
 
+
+
 ---
 ### Estimating the rate parameters
 
 It can be helpful to visualize the $$\theta_{p,k}$$'s as a set of grids for each action, seen previously with the contour plots.
 
-1. For each position and action store the counts in matrix $$M_p$$, whose rows and columns coincide to the (x,y) coordinates
-
+1. For each position and action store the counts in matrix $$M_p$$, whose rows and columns coincide to the (x,y) coordinates	
+```yaml
 Faceoffs are omitted for defenders. None were recorded, nor do we except them to hold any information for the position. 
-
+```
 2. Add the matrix corresponding to its mirrored position flipped along the $$y=0$$ entries to $$M_p$$. Add corresponding total exposure times $$N_p$$ as well.
+	$$M_{LD}'[x,y]=M_{LD}[x,y] + M_{LD}[x,-y]$$ 
 
-$$M_{LD}'[x,y]=M_{LD}[x,y] + M_{LD}[x,-y]$$ 
-
-$$N_{LD}'=N_{LD} + N_{RD}$$ 
-
+	$$N_{LD}'=N_{LD} + N_{RD}$$ 	
+```yaml
 This step enforces symmetry between the two positions and sets any action on the $$y=0$$ line to have zero sway. Now two shots at $$(x,-10)$$ and $$(x,10)$$ will cancel out. It has the added benefit of equating the total rates for each action, setting the terms $$\sum(\theta_{RD,k} - \theta_{LD,k}) = 0$$. If we were given an event at an undisclosed location it provides no evidence. This is needed to prevent unwanted clustering based on archtypes. For example "stay at home" defenders tend to have high hit and block rates but low shooting rates. The opposite is true for "offensive" defenders. 
-
+```
 3. Apply a Kernel Smoothing Method to each matrix. 
-
+```yaml
 To avoid zero frequency problems we add a pseudo count of $$1 \times \frac{N_p}{N_{\text{base class}}}$$ to each count (The fraction preserves a one to one ratio after calculating rates). Afterwards a kernel smoothing method is applied to $$M_p'$$ to encorporate spatial dependency amongst $$\theta$$'s. The main idea here is to apply regularization techniques commonly found in generalized additive models while retaining the benefits of our naive bayes classifier.
-
 At the moment I've using a gaussian kernel with $$\sigma = 5$$ based on visual inspection. A more principled approach, such as selection through cross validation is left to future work. However, current results have been impartial to alternative choices. It will be worth looking into adaptive kernels, whose bandwidth fluctuates to accomodate sparsity. Recall our log odds formula; our aim isn't an accurate estimate of each position's rate, but of their ratio. The ratio dictates the seperation of classes. When count data is sparse for either position the estimated ratio can be highly variable and our pseudo count - which in some way behaves like a prior - may have a stronger than intended effect. 
-
+```
 4. Obtain the rates per 60 minutes by dividing each count by exposure $$N_{p}'$$
 
 ---
@@ -144,6 +144,10 @@ Furthermore, we impose a constraint on $l$ such that the size of the majority ca
 The most defenders a team has iced this season is 7; which has 70 possible configurations of LD & RD. This makes brute force is a viable option.
 
 Step 1 and 2 are repeated until the labels converge or capped at a maximum number of iterations.
+
+
+![](../../assets/images/d_log_odds_dist.jpg)
+*The histogram for the strength terms between left and right defenders.*
 
 ---
 

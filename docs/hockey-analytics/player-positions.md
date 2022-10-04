@@ -690,39 +690,70 @@ A short summary of our clustering algorithm:
 
 There remains a lot to be tinkered with. Adding penalties, separating wrap-arounds or other secondary types from shots, partitioning the rink's grid by zone before smoothing, possibly lasso regularization... I suspect most to be fruitless. The main sticking point is distilling winger labels. Diminishing the additive smoothing or pushing the KDE to produce more discriminative ratios leads to similar yet murky results. Forwards tend to cross over the $$y = 0$$ line enough to require more spatial sampling for consistency. The only way I've found to overcome this is by feeding season data into the single game strength terms, in perhaps the most unprincipled manner. I subsist this provides close to ideal results without manual inspection. It seems adequate if your goal is to get positional eligibility status for fantasy hockey.
 
-You can reach me on twitter @yimmymcbill if you have suggestions!  
+I've provided a summary of results for each team in the links below. You can reach me on twitter @yimmymcbill if you have suggestions!  
 
 [Anaheim Ducks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/24-roster_positions.jpg)
+
 [Arizona Coyotes](https://drydan.github.io/docs/hockey-analytics/2021_rosters/53-roster_positions.jpg)
+
 [Boston Bruins](https://drydan.github.io/docs/hockey-analytics/2021_rosters/6-roster_positions.jpg)
+
 [Buffalo Sabres](https://drydan.github.io/docs/hockey-analytics/2021_rosters/7-roster_positions.jpg)
+
 [Calgary Flames](https://drydan.github.io/docs/hockey-analytics/2021_rosters/20-roster_positions.jpg)
+
 [Carolina Hurricanes](https://drydan.github.io/docs/hockey-analytics/2021_rosters/12-roster_positions.jpg)
+
 [Chicago Blackhawks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/16-roster_positions.jpg)
+
 [Colorado Avalanche](https://drydan.github.io/docs/hockey-analytics/2021_rosters/21-roster_positions.jpg)
+
 [Columbus Blue Jackets](https://drydan.github.io/docs/hockey-analytics/2021_rosters/29-roster_positions.jpg)
+
 [Dallas Stars](https://drydan.github.io/docs/hockey-analytics/2021_rosters/25-roster_positions.jpg)
+
 [Detroit Red Wings](https://drydan.github.io/docs/hockey-analytics/2021_rosters/17-roster_positions.jpg)
+
 [Edmonton Oilers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/22-roster_positions.jpg)
+
 [Florida Panthers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/13-roster_positions.jpg)
+
 [Los Angeles Kings](https://drydan.github.io/docs/hockey-analytics/2021_rosters/26-roster_positions.jpg)
+
 [Minnesota Wild](https://drydan.github.io/docs/hockey-analytics/2021_rosters/30-roster_positions.jpg)
+
 [Montréal Canadiens](https://drydan.github.io/docs/hockey-analytics/2021_rosters/8-roster_positions.jpg)
+
 [Nashville Predators](https://drydan.github.io/docs/hockey-analytics/2021_rosters/18-roster_positions.jpg)
+
 [New Jersey Devils](https://drydan.github.io/docs/hockey-analytics/2021_rosters/1-roster_positions.jpg)
+
 [New York Islanders](https://drydan.github.io/docs/hockey-analytics/2021_rosters/2-roster_positions.jpg)
+
 [New York Rangers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/3-roster_positions.jpg)
+
 [Ottawa Senators](https://drydan.github.io/docs/hockey-analytics/2021_rosters/9-roster_positions.jpg)
+
 [Philadelphia Flyers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/4-roster_positions.jpg)
+
 [Pittsburgh Penguins](https://drydan.github.io/docs/hockey-analytics/2021_rosters/5-roster_positions.jpg)
+
 [San Jose Sharks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/28-roster_positions.jpg)
+
 [Seattle Kraken](https://drydan.github.io/docs/hockey-analytics/2021_rosters/55-roster_positions.jpg)
+
 [St. Louis Blues](https://drydan.github.io/docs/hockey-analytics/2021_rosters/19-roster_positions.jpg)
+
 [Tampa Bay Lightning](https://drydan.github.io/docs/hockey-analytics/2021_rosters/14-roster_positions.jpg)
+
 [Toronto Maple Leafs](https://drydan.github.io/docs/hockey-analytics/2021_rosters/10-roster_positions.jpg)
+
 [Vancouver Canucks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/23-roster_positions.jpg)
+
 [Vegas Golden Knights](https://drydan.github.io/docs/hockey-analytics/2021_rosters/54-roster_positions.jpg)
+
 [Washington Capitals](https://drydan.github.io/docs/hockey-analytics/2021_rosters/15-roster_positions.jpg)
+
 [Winnipeg Jets](https://drydan.github.io/docs/hockey-analytics/2021_rosters/52-roster_positions.jpg)
 
 

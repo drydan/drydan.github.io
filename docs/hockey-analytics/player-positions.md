@@ -50,16 +50,14 @@ The National Hockey League recorded the following information for every game in 
 
 # Methodology
 
-Instead of clustering all positions at once, we take a top-down hierarchical approach. First partition skaters into forwards and defenders. Then defenders into LD and RD. Then forwards into centers and wingers, and finally wingers into LW and RW. 
+Instead of clustering all positions at once, we take a top-down hierarchical approach. First skaters are partitioned into forwards and defenders. Then defenders into LD and RD. Then forwards into centers and wingers, and finally wingers into LW and RW. 
 
 ## Forwards vs. Defenders
 
-Define the n by n matrix $$\Delta$$ whose $$(i, j)$$-th entry corresponds to the number of seconds teammates $$i$$ and $$j$$ shared on the ice at even strength in a game. The total even strength time on ice for each player is stored in the diagonal entries. $$\Delta$$ can be constructed using the shift data. Let $$B$$ be the binary matrix obtained from the shift chart, then $$\Delta=BB^T$$. From $$\Delta$$, we compute $$\delta$$ by dividing each row by its diagonal entry, so each entry refers to the proportion of a player's time spent with another. For convenience we set the diagonal elements of $$\delta$$ to zero. Each player is always accompanied by 4 teammates so every row will sum to 4. Following this idea, consider just the columns corresponding to defenders, we'll denote this matrix as $$\delta^D$$. The sum of a forward's row will be very close to 2; and very close to 1 for a defender. 
+Define the n by n matrix $$\Delta$$ whose $$(i, j)$$-th entry corresponds to the number of seconds teammates $$i$$ and $$j$$ shared on the ice at even strength in a game. The diagonal entries refer to each player's total ice time. $$\Delta$$ can be constructed using the shift data. Let $$B$$ be the binary matrix obtained from the shift chart, then $$\Delta=BB^T$$. From $$\Delta$$, we compute $$\delta$$ by dividing each row by its diagonal entry, so each entry refers to the proportion of a player's time spent with another. For convenience we set the diagonal elements of $$\delta$$ to zero. Each player is always accompanied by 4 teammates so every row will sum to 4. Following this thought, consider just the columns corresponding to defenders, $$\delta^D$$. The sum of a forward's row will be very close to 2; and very close to 1 for a defender. Then the binary vector $$x$$ which minimizes $$\sum_{i=1}^{n} \| 2-x_i-\delta^D_{i}x \| $$ exhibits our F/D labels ($$x_i = 1$$ indicating the skater is a defender). I've opted to solve this heuristically, via a steepest ascent local search. Neighbourhoods are defined by at most 2 label mutations from the current candidate solution. While the search is robust to choice of starting location, the provided D and F labels are quite reliable. 
 
 ![](../../assets/images/toi_matrix.jpg)
 *Tampa Bay's shift data for the opening game of the 2021/2022 season presented in matrix form*
-
-Let binary vector $$x$$ represent our F/D labels where $$x_i = 1$$ indicates the skater is labelled defender. To recover the F/D labels we find the $$x$$ which minimizes $$\sum_{i=1}^{n} \| 2-x_i-\delta^D_{i}x \| $$. I've opted to solve this heuristically, via a steepest ascent local search. While the search is robust to choice of starting location, the initial D and F labels are quite reliable. Neighbourhoods are defined by at most 2 label mutations from the current candidate solution. 
 
 72 instances required swapping defenders to forwards, none in the other direction. One was the result of Robert Burtuzzo moving from D to F after the first period - caught with a sum near 1.6. Which prompts the question, how will we handle mid game roll changes? For simplicity, and issues detailed ahead, we restrict the problem to one label per player in each game. 
 
@@ -94,12 +92,12 @@ $$
 
 which determines cluster membership. A positive $$\alpha_{i,j}$$ means the player is more likely to be LD. 
 
-The log odds require estimating the rate parameters, which in itself calls for existing labels. A typical solution tumbles between the two calculations, with each update hopefully bringing us closer to convergence. So far we've only utilized event data. A satisfying solution will pair both event and shift sources, addressed in step 2.
+The log odds require estimating the rate parameters, which in itself calls for existing labels. A typical solution tumbles between the two calculations, with each update hopefully bringing us closer to convergence. Yet we've only utilized event data. A satisfying solution will pair both event and shift sources, and we address that in step 2.
 
 ---
 ### Estimating the rate parameters
 
-It can be helpful to visualize the $$\theta_{p,k}$$'s as a set of grids for each action, seen previously with the contour plots.
+It can be helpful to visualize the $$\theta_{p,k}$$'s on a set of grids for each action, seen previously with the contour plots.
 
 {:style="counter-reset:step-counter 0"}
 1. For each position and action store the total counts in matrix $$M_p$$, whose rows and columns coincide with the (x,y) coordinates.	
@@ -161,7 +159,7 @@ Step 1 and 2 are repeated until the labels converge or capped at a maximum numbe
 
 Event data is like splicing a video stream into snapshots of *key* action moments. *Key* moments - which might be less discriminative than the times a player is simply floating around - are rare enough a single game's worth doesn't ensure success. The most extreme example being Buffalo's entire D core registering a single even strength event in (gameId: 2021020566); Boston's Curtis Lazar was generous enough to hit Casey Fitzgerald. Conversely, events can be misleading. It's not uncommon for players to have "off" games while their team does not provide enough to mitigate the faulty evidence. 
 
-The good news is that we don't have to restrict ourselves to one game worth of information. It is reasonable to expect that players or pairs will take the same roles throughout the season. Say a pair play 20 games in one orientation, how much evidence do you need to be convinced they swapped roles for the next game? Typically for data with structural correlations, random effects are added to the model. To stay within our framework, I've decided to apply a weighted aggregate to feature vectors. Each $$x_{i,j} = \sum_{i',j'}w_{i',j'}x_{i,j}$$ where $$w$$ should resemble our intuition of which responses are correlated. This leads to a bevy of options. For example a weighting can be proportional to the ice time given to the player in each game. This results in players having a constant $$\alpha$$ throughout the season. It would be equivalent to a set ranking for role priority. Another option is to only weigh in games where the player spends the majority of the time with common linemates. Lines are determined by the graph constructed from $$\delta$$. Let an edge $${i,j}$$ exist if $$\delta[i,j]$$ and $$\delta[j,i]$$ are greater than some threshold. Then all disconnected components which are triangles form F lines, all arcs form D pairs. For extra measure, restrict label conflicts within each component.
+The good news is that we don't have to restrict ourselves to one game worth of information. It is reasonable to expect that players prefer the same roles throughout the season. Say a pair play 20 games in one orientation, how much evidence do you need to be convinced they swapped roles for the next game? Typically for data with structural correlations, random effects are added to the model. To stay within our framework, I've decided to apply a weighted aggregate to feature vectors. Each $$x_{i,j} = \sum_{i',j'}w_{i',j'}x_{i,j}$$ where $$w$$ should resemble our intuition of which responses are correlated. This leads to a bevy of options. For example a weighting can be proportional to the ice time given to the player in each game. This results in players having a constant $$\alpha$$ throughout the season. It would be equivalent to a set ranking for role priority. Another option is to only weigh in games where the player spends the majority of the time with common linemates. Lines are determined by a graph constructed from $$\delta$$. Let an edge $${i,j}$$ exist if $$\delta[i,j]$$ and $$\delta[j,i]$$ are greater than some threshold. Then all disconnected components which are triangles form F lines, all arcs form D pairs. For extra measure, restrict labels to avoid conflicts within each component.
 
 ![](../../assets/images/tor_d_odds_dist.jpg)
 *Histogram of log odds for 4 prominent members of Toronto's Defence. Notice Morgan Rielly, who I contest played every game as LD strictly due to seniority, has some games suggesting otherwise. His partner for most of the year, TJ Brodie plays a flex role but indulges in the left side whenever the pair is split.*
@@ -680,83 +678,48 @@ Once again, let's look at the results for Toronto. The winger labels are suspect
 </tr>
 </table>
 
+As for the entire league, 36229 out of 47208 come to a concensus for all three options. The remaining conflicts are resolved in the following manner. First by majority vote, then by sorting out the remaining labels for each game and team with the single game strength terms.
+
 ## Concluding Remarks
-
-A short summary of our clustering algorithm:
-
-    1. Use Kernel Density Estimation to supply event rates for our mixture model.
-    2. Obtain membership odds, which are then airdropped into a Group Comparison model weighted by shift data
-    3. Find memberships by brute forcing the constrained optimization problem. 
 
 There remains a lot to be tinkered with. Adding penalties, separating wrap-arounds or other secondary types from shots, partitioning the rink's grid by zone before smoothing, possibly lasso regularization... I suspect most to be fruitless. The main sticking point is distilling winger labels. Diminishing the additive smoothing or pushing the KDE to produce more discriminative ratios leads to similar yet murky results. Forwards tend to cross over the $$y = 0$$ line enough to require more spatial sampling for consistency. The only way I've found to overcome this is by feeding season data into the single game strength terms, in perhaps the most unprincipled manner. I subsist this provides close to ideal results without manual inspection. It seems adequate if your goal is to get positional eligibility status for fantasy hockey.
 
-I've provided a summary of results for each team in the links below. You can reach me on twitter @yimmymcbill if you have suggestions!  
+You can reach me on twitter @yimmymcbill if you have suggestions!  
+
+I've provided a summary for each team in the links below.
 
 [Anaheim Ducks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/24-roster_positions.jpg)
-
 [Arizona Coyotes](https://drydan.github.io/docs/hockey-analytics/2021_rosters/53-roster_positions.jpg)
-
 [Boston Bruins](https://drydan.github.io/docs/hockey-analytics/2021_rosters/6-roster_positions.jpg)
-
 [Buffalo Sabres](https://drydan.github.io/docs/hockey-analytics/2021_rosters/7-roster_positions.jpg)
-
 [Calgary Flames](https://drydan.github.io/docs/hockey-analytics/2021_rosters/20-roster_positions.jpg)
-
 [Carolina Hurricanes](https://drydan.github.io/docs/hockey-analytics/2021_rosters/12-roster_positions.jpg)
-
 [Chicago Blackhawks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/16-roster_positions.jpg)
-
 [Colorado Avalanche](https://drydan.github.io/docs/hockey-analytics/2021_rosters/21-roster_positions.jpg)
-
 [Columbus Blue Jackets](https://drydan.github.io/docs/hockey-analytics/2021_rosters/29-roster_positions.jpg)
-
 [Dallas Stars](https://drydan.github.io/docs/hockey-analytics/2021_rosters/25-roster_positions.jpg)
-
 [Detroit Red Wings](https://drydan.github.io/docs/hockey-analytics/2021_rosters/17-roster_positions.jpg)
-
 [Edmonton Oilers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/22-roster_positions.jpg)
-
 [Florida Panthers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/13-roster_positions.jpg)
-
 [Los Angeles Kings](https://drydan.github.io/docs/hockey-analytics/2021_rosters/26-roster_positions.jpg)
-
 [Minnesota Wild](https://drydan.github.io/docs/hockey-analytics/2021_rosters/30-roster_positions.jpg)
-
 [Montréal Canadiens](https://drydan.github.io/docs/hockey-analytics/2021_rosters/8-roster_positions.jpg)
-
 [Nashville Predators](https://drydan.github.io/docs/hockey-analytics/2021_rosters/18-roster_positions.jpg)
-
 [New Jersey Devils](https://drydan.github.io/docs/hockey-analytics/2021_rosters/1-roster_positions.jpg)
-
 [New York Islanders](https://drydan.github.io/docs/hockey-analytics/2021_rosters/2-roster_positions.jpg)
-
 [New York Rangers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/3-roster_positions.jpg)
-
 [Ottawa Senators](https://drydan.github.io/docs/hockey-analytics/2021_rosters/9-roster_positions.jpg)
-
 [Philadelphia Flyers](https://drydan.github.io/docs/hockey-analytics/2021_rosters/4-roster_positions.jpg)
-
 [Pittsburgh Penguins](https://drydan.github.io/docs/hockey-analytics/2021_rosters/5-roster_positions.jpg)
-
 [San Jose Sharks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/28-roster_positions.jpg)
-
 [Seattle Kraken](https://drydan.github.io/docs/hockey-analytics/2021_rosters/55-roster_positions.jpg)
-
 [St. Louis Blues](https://drydan.github.io/docs/hockey-analytics/2021_rosters/19-roster_positions.jpg)
-
 [Tampa Bay Lightning](https://drydan.github.io/docs/hockey-analytics/2021_rosters/14-roster_positions.jpg)
-
 [Toronto Maple Leafs](https://drydan.github.io/docs/hockey-analytics/2021_rosters/10-roster_positions.jpg)
-
 [Vancouver Canucks](https://drydan.github.io/docs/hockey-analytics/2021_rosters/23-roster_positions.jpg)
-
 [Vegas Golden Knights](https://drydan.github.io/docs/hockey-analytics/2021_rosters/54-roster_positions.jpg)
-
 [Washington Capitals](https://drydan.github.io/docs/hockey-analytics/2021_rosters/15-roster_positions.jpg)
-
 [Winnipeg Jets](https://drydan.github.io/docs/hockey-analytics/2021_rosters/52-roster_positions.jpg)
-
-
 
 ## References
 [1] Firth, D., Kosmidis, I., & Turner, H. (2019). Davidson-Luce model for multi-item choice with ties. arXiv preprint arXiv:1909.07123.

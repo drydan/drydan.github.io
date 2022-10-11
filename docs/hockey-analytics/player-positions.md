@@ -345,7 +345,7 @@ $$
 ![](../../assets/images/w_log_odds_dist.jpg)
 *The histogram for log odds between left and right wingers, a sad site.*
 
-Once again, let's look at the results for Toronto. The winger labels are suspect until we aggregate games. Season and linemate weightings tend to agree. When they do not, manual inspection only favours the latter when the line has played plenty of games together. 
+Once again, let's look at the results for Toronto. The winger labels are suspect until we aggregate games. Season and linemate weightings tend to agree. When they do not, manual inspection typically favours the latter when the line has played plenty of games together. 
 
 <table>
 <tr>
@@ -682,7 +682,7 @@ As for the entire league, 36229 out of 47208 come to a concensus for all three o
 
 ## Concluding Remarks
 
-There remains a lot to be tinkered with. Adding penalties, separating wrap-arounds or other secondary types from shots, partitioning the rink's grid by zone before smoothing, possibly lasso regularization... I suspect most to be fruitless. The main sticking point is distilling winger labels. Diminishing the additive smoothing or pushing the KDE to produce more discriminative ratios leads to similar yet murky results. Forwards tend to cross over the $$y = 0$$ line enough to require more spatial sampling for consistency. The only way I've found to overcome this is by feeding season data into the single game strength terms, in perhaps the most unprincipled manner. I subsist this provides close to ideal results without manual inspection. It seems adequate if your goal is to get positional eligibility status for fantasy hockey.
+There remains a lot to be tinkered with. Adding penalties, separating wrap-arounds or other secondary types from shots, partitioning the rink's grid by zone before smoothing, possibly some more denoising... I suspect most to be fruitless. The main sticking point is distilling winger labels. Diminishing the additive smoothing or pushing the KDE to produce more discriminative ratios leads to similar yet murky results. Forwards tend to cross over the $$y = 0$$ line enough to require more spatial sampling for consistency. The only way I've found to overcome this is by feeding season data into the single game strength terms, in perhaps the most unprincipled manner. I subsist this provides close to ideal results without manual inspection. It seems adequate if your goal is to get positional eligibility status for fantasy hockey.
 
 You can reach me on twitter @yimmymcbill if you have suggestions!  
 

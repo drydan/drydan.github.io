@@ -4,7 +4,7 @@ title: Player Positions
 parent: Hockey Analytics
 nav_order: 1
 mathjax: true
-image: https://raw.githubusercontent.com/drydan/drydan.github.io/main/assets/images/preview-img-positions.png
+image: ../../assets/images/preview-img-positions.png
 ---
 
 # Correcting Player Positions

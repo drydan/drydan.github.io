@@ -21,7 +21,7 @@ C    |15794 |0.334562
 LW   |9096|0.192679
 RW    |6415|0.135888  
 
-Positions are hardly ever updated once a player joins the league. This leads to some untrustworthy situations. Consider the game between the Ducks and Hawks on March 23rd 2022 (gameId: 2021021018). By the submitted roster sheet, Anaheim played with 1 left wing, 1 right wing and a cast of 10 centers. On top of that, the league doesn't distinguish between left and right defenders. It is commonly brought into question how well a defender fairs playing on their off hand, or how shallow the league's RD depth is. Corrected position labels can settle these questions as well as other roster considerations. Our goal is to assigned one of the five positions to each skater observed in each game for the 2021/2022 regular season.
+Positions are hardly ever updated once a player joins the league. This leads to some untrustworthy situations. Consider the game between the Ducks and Hawks on March 23rd 2022 (gameId: 2021021018). By the submitted roster sheet, Anaheim played with 1 left wing, 1 right wing and a cast of 10 centers. On top of that, the league doesn't distinguish between left and right defenders. It is commonly brought into question how well a defender fairs playing on their off hand, or how shallow the league's RD depth is. Corrected position labels can settle these questions and other roster considerations. Our goal is to assigned one of the five positions to each skater observed in each game for the 2021/2022 regular season.
 
 # Data 
 
@@ -55,22 +55,22 @@ Instead of clustering all positions at once, we take a top-down hierarchical app
 
 ## Forwards vs. Defenders
 
-Define the n by n matrix $$\Delta$$ whose $$(i, j)$$-th entry corresponds to the number of seconds teammates $$i$$ and $$j$$ shared on the ice at even strength in a game. The diagonal entries refer to each player's total ice time. $$\Delta$$ can be constructed using the shift data. Let $$B$$ be the binary matrix obtained from the shift chart, then $$\Delta=BB^T$$. From $$\Delta$$, we compute $$\delta$$ by dividing each row by its diagonal entry, so each entry refers to the proportion of a player's time spent with another. For convenience we set the diagonal elements of $$\delta$$ to zero. Each player is always accompanied by 4 teammates so every row will sum to 4. Following this thought, consider just the columns corresponding to defenders, $$\delta^D$$. The sum of a forward's row will be very close to 2; and very close to 1 for a defender. Then the binary vector $$x$$ which minimizes $$\sum_{i=1}^{n} \| 2-x_i-\delta^D_{i}x \| $$ exhibits our F/D labels ($$x_i = 1$$ indicating the skater is a defender). I've opted to solve this heuristically, via a steepest ascent local search. Neighbourhoods are defined by at most 2 label mutations from the current candidate solution. While the search is robust to choice of starting location, the provided D and F labels are quite reliable. 
+Define the n by n matrix $$\Delta$$ whose $$(i, j)$$-th entry corresponds to the number of seconds teammates $$i$$ and $$j$$ shared on the ice at even strength in a game. The diagonal entries refer to each player's total ice time. $$\Delta$$ can be constructed using the shift data. Let $$B$$ be the binary matrix obtained from the shift chart (refer to above image), then $$\Delta=BB^T$$. From $$\Delta$$, we compute $$\delta$$ by dividing each row by its diagonal entry, so each entry refers to the proportion of a player's time spent with another. For convenience we set the diagonal elements of $$\delta$$ to zero. Each player is always accompanied by 4 teammates so every row will sum to 4. Following this thought, consider just the columns corresponding to defenders, $$\delta^D$$. The sum of a forward's row will be very close to 2; and very close to 1 for a defender. Then the binary vector $$x$$ which minimizes $$\sum_{i=1}^{n} \| 2-x_i-\delta^D_{i}x \| $$ exhibits our F/D labels ($$x_i = 1$$ indicating the skater is a defender). I've opted to solve this heuristically, via a steepest ascent local search. Neighbourhoods are defined by at most 2 label mutations from the current candidate solution. While the search is robust to choice of starting location, the provided D and F labels are quite reliable. 
 
 ![](../../assets/images/toi_matrix.jpg)
 *Tampa Bay's shift data for the opening game of the 2021/2022 season presented in matrix form*
 
-72 instances required swapping defenders to forwards, none in the other direction. One was the result of Robert Burtuzzo moving from D to F after the first period - caught with a sum near 1.6. Which prompts the question, how will we handle mid game roll changes? For simplicity, and issues detailed ahead, we restrict the problem to one label per player in each game. 
+72 instances required swapping defenders to forwards, none in the other direction. One was the result of Robert Burtuzzo moving from D to F after the first period - caught with a row sum near 1.6. Which prompts the question, how will we handle mid game role changes? For simplicity, and issues detailed ahead, we restrict the problem to one label per player in each game. 
 
 ## Left vs. Right Defenders
 
-We proceed in a similar fashion to classical expectation-maximization algorithms. EM is an iterative algorithm that is useful for handling missing data. While defender labels are truly missing, the forwards are so messed up it's in our best interest to treat them so.
+We proceed in a similar fashion to classical expectation-maximization algorithms for mixture models. EM is an iterative algorithm that is useful for handling missing data. While defender labels are truly missing, the forwards are so messed up it's in our best interest to treat them so.
 
 Defenders are assigned an initial label using a biased coin, 51% in favour of whichever side of the $$y = 0$$ line they appeared more often on in the game. This gentle nudge is only necessary to avoid any manual aliasing afterwards. The algorithm is described below in detail. In the next section we will adjust it to cluster the forwards.
 
 ### Step 1. Naive Bayes Classifier
 
-Let $$x_{ij}$$ be a feature vector encoding the counts of each action $$a$$ at each coordinate $$(x,y)$$ conducted by player $$i$$ in game $$j$$. For example, in the $$j$$-th game of the season, player $$i$$ recorded one shot at center ice, thus $$x_{ijk}=1$$ where $$k=(\text{Shooter},(0,0))$$ otherwise 0. We can think of each $$x_{ijk}$$ as generated independently from a poisson distribution with mean $$n_{ij}\theta_{pk}$$ where $$p$$ identifies the player's position. Parameter $$\theta_{pk}$$ defines the *rate* at which $$k$$ occurs per 60 minutes. $$n_{ij}$$ is the constant *exposure* or player $$i$$'s ice time in game $$j$$ divided by 60 minutes. Then we can model the entire population of defenders as a multivariate poisson mixture with two components for LD and RD.
+Let $$x_{ij}$$ be a vector encoding the counts of each action $$a$$ at each coordinate $$(x,y)$$ conducted by player $$i$$ in game $$j$$. For example, in the $$j$$-th game of the season, player $$i$$ recorded one shot at center ice, thus $$x_{ijk}=1$$ where $$k=(\text{Shooter},(0,0))$$ otherwise 0. We can think of each $$x_{ijk}$$ as generated independently from a poisson distribution with mean $$n_{ij}\theta_{pk}$$ where $$p$$ identifies the player's position. Parameter $$\theta_{pk}$$ defines the *rate* at which $$k$$ occurs per 60 minutes. $$n_{ij}$$ is the constant *exposure* or player $$i$$'s ice time in game $$j$$ divided by 60 minutes. Then we can model the entire population of defenders as a multivariate poisson mixture with two components for LD and RD.
 
 The conditional likelihood of $$x_{ij}$$ given it has label LD is:
     
@@ -91,9 +91,9 @@ $$
 \end{aligned}
 $$
 
-which determines cluster membership. A positive $$\alpha_{i,j}$$ means the player is more likely to be LD. 
+which determines membership for each sub-population. A positive $$\alpha_{i,j}$$ means the player is more likely to be LD. 
 
-The log odds require estimating the rate parameters, which in itself calls for existing labels. A typical solution tumbles between the two calculations, with each update hopefully bringing us closer to convergence. Yet we've only utilized event data. A satisfying solution will pair both event and shift sources, and we address that in step 2.
+The log odds require estimating the rate parameters, which in itself calls for existing labels. A typical solution using EM tumbles between the two calculations, with each update hopefully bringing us closer to convergence. At this point we've only utilized event data. A satisfying solution will pair both event and shift sources, and we address that in step 2.
 
 ---
 ### Estimating the rate parameters
@@ -112,15 +112,15 @@ Faceoffs are omitted for defenders. None were recorded, nor do we except them to
 
 	$$N_{LD}'=N_{LD} + N_{RD}$$ 	
 <div class="code-example" markdown="1">
-This step enforces symmetry between the two positions and sets any action on the $$y=0$$ line to have zero sway. Now two shots at $$(x,-10)$$ and $$(x,10)$$ will cancel out. It has the added benefit of equating the total rates for each action, setting the terms $$\sum(\theta_{RD,k} - \theta_{LD,k}) = 0$$. If we were given an event at an undisclosed location it provides no evidence. This is a wanted consequence, as it prevents clustering based on archetypes. For example "stay at home" defenders tend to have high hit and block rates but low shooting rates. The opposite is true for "offensive" defenders. 
+This step enforces symmetry between the two positions and sets any action on the $$y=0$$ line to have zero sway. Now if a player takes two shots at $$(x,-10)$$ and $$(x,10)$$ they will cancel out. It has the added benefit of equating the total rates for each action, setting the terms $$\sum(\theta_{RD,k} - \theta_{LD,k}) = 0$$. If we were given an event at an undisclosed location it provides no evidence. This is a wanted consequence, as it prevents clustering based on archetypes. For example "stay at home" defenders tend to have high hit and block rates but low shooting rates. The opposite is true for "offensive" defenders. 
 </div>
 
 {:style="counter-reset:step-counter 2"}
 3. Apply a Kernel Smoothing Method to each matrix. 
 <div class="code-example" markdown="1">
-To avoid zero frequency problems we add a pseudo count of $$1 \times \frac{N_p}{N_{\text{base class}}}$$ to each count (The fraction preserves a one to one ratio after calculating rates). Afterwards a kernel smoothing method is applied to $$M_p'$$ to incorporate spatial dependency amongst $$\theta$$'s. The main idea here is to apply regularization techniques commonly found in generalized additive models while retaining the benefits of our naive bayes classifier, predominantly speed.
+To avoid zero frequency problems we add a pseudo count of $$1 \times \frac{N_p}{N_{\text{base class}}}$$ to each count (The fraction preserves a one to one ratio after calculating rates). Afterwards a kernel smoothing method is applied to $$M_p'$$ to incorporate spatial dependency amongst $$\theta$$'s. The main idea here is to apply regularization techniques, commonly found in generalized additive models, while retaining the benefits of our naive bayes classifier, predominantly speed.
 
-At the moment I've using a gaussian kernel with $$\sigma = 5$$ based on visual inspection. A more principled approach, such as selection through cross validation, is left to future work. However, current results have been impartial to alternative choices. It will be worth looking into adaptive kernels, whose bandwidth fluctuates to accommodate sparse regions of the rink. Recall our log odds formula; our aim isn't an accurate estimate of each position's rate, but of the ratio between classes. It is the ratio whichh dictates the separation of classes. When count data is sparse for either position the estimated ratio can be highly variable and our pseudo count - which in some way influences the results like a prior - may have a stronger than intended effect. 
+At the moment I've using a gaussian kernel with $$\sigma = 5$$ based on visual inspection. A more principled approach, such as selection through cross validation, is left to future work. However, current results have been impartial to alternative choices. I've included a viz for $$\sigma = 20$$ at the bottom of the article. It will be worth looking into adaptive kernels, whose bandwidth fluctuates to accommodate sparse regions of the rink. Recall our log odds formula; our aim isn't an accurate estimate of each position's rate, but of the ratio between classes. It is the ratio which dictates the separation of classes. When count data is sparse for either position the estimated ratio can be highly variable and our pseudo count - which in some way influences the results like a prior - may have a stronger than intended effect. 
 </div>
 
 {:style="counter-reset:step-counter 3"}
@@ -138,9 +138,9 @@ Due to the nature of the problem, whenever two teammates are on the ice we wish 
 
 - $$ p(i=RD, j=LD) = \frac{e^{\alpha_j}}{e^{\alpha_i}+e^{\alpha_j}+e^{z + .5(\alpha_i+\alpha_j)}}$$
 
-Where $$z \in (-\infty,\infty)$$ determines the probability of a tie. We set $z=0$ which seems reasonable enough for our purposes. $$\alpha_i$$ represents player $$i$$'s "strength" or evidence for playing on the left side. The $$\alpha$$'s are usually fit to the response data, but for this clustering problem we take them to be the log odds computed previously. 
+Where $$z \in (-\infty,\infty)$$ determines the probability of a tie. We set $z=0$ which seems reasonable enough for our purposes. $$\alpha_i$$ represents player $$i$$'s "strength" or evidence for playing on the left side. The $$\alpha$$'s are usually fit to the response data, but for this clustering problem we take them to be the log odds computed previously. <s>I think</s> I'm getting away with this since both the Davidson strength terms and log odds are relative values.
 
-Since pairwise comparisons only occur between teammates and only across one game, we can compartmentalize the labelling process.
+Since pairwise comparisons only occur between teammates and only across one game, we can compartmentalize the labelling process accordinglyy.
 We find labels $$l$$ such that log likelihood of our pairwise comparison model weighted by the time each pair spent on the ice is maximized:
 
 $$ \sum_{i<j}\Delta[i,j]*log(p(i=l_i, j=l_j))$$
@@ -148,7 +148,7 @@ $$ \sum_{i<j}\Delta[i,j]*log(p(i=l_i, j=l_j))$$
 Furthermore, we impose a constraint on $l$ such that the size of the majority can only surpass the minority class by 1. This enforces our expectations of roster construction.
 The most defenders a team has iced this season is 7; which has 70 possible configurations of LD & RD. This makes brute force is a viable option.
 
-Step 1 and 2 are repeated until the labels converge or capped at a maximum number of iterations.
+Step 1 and 2 are repeated until the labels converge or capped after a certain number of iterations.
 
 
 ![](../../assets/images/d_log_odds_dist.jpg)
@@ -160,12 +160,12 @@ Step 1 and 2 are repeated until the labels converge or capped at a maximum numbe
 
 Event data is like splicing a video stream into snapshots of *key* action moments. *Key* moments - which might be less discriminative than the times a player is simply floating around - are rare enough a single game's worth doesn't ensure success. The most extreme example being Buffalo's entire D core registering a single even strength event in (gameId: 2021020566); Boston's Curtis Lazar was generous enough to hit Casey Fitzgerald. Conversely, events can be misleading. It's not uncommon for players to have "off" games while their team does not provide enough to mitigate the faulty evidence. 
 
-The good news is that we don't have to restrict ourselves to one game worth of information. It is reasonable to expect that players prefer the same roles throughout the season. Say a pair play 20 games in one orientation, how much evidence do you need to be convinced they swapped roles for the next game? Typically for data with structural correlations, random effects are added to the model. To stay within our framework, I've decided to apply a weighted aggregate to feature vectors. Each $$x_{i,j} = \sum_{i',j'}w_{i',j'}x_{i,j}$$ where $$w$$ should resemble our intuition of which responses are correlated. This leads to a bevy of options. For example a weighting can be proportional to the ice time given to the player in each game. This results in players having a constant $$\alpha$$ throughout the season. It would be equivalent to a set ranking for role priority. Another option is to only weigh in games where the player spends the majority of the time with common linemates. Lines are determined by a graph constructed from $$\delta$$. Let an edge $${i,j}$$ exist if $$\delta[i,j]$$ and $$\delta[j,i]$$ are greater than some threshold. Then all disconnected components which are triangles form F lines, all arcs form D pairs. For extra measure, restrict labels to avoid conflicts within each component.
+The good news is that we don't have to restrict ourselves to one game worth of information. It is reasonable to expect that players prefer the same roles throughout the season. Say a pair play 20 games in one orientation, how much evidence do you need to be convinced they swapped roles for the next game? To stay within our framework, I've decided to apply a weighted aggregate to feature vectors. Each $$x_{i,j} = \sum_{i',j'}w_{i',j'}x_{i,j}$$ where $$w$$ should resemble our intuition of which responses are correlated. This leads to a bevy of options. For example, a weighting can be proportional to the ice time given to the player in each game. This results in players having a constant $$\alpha$$ throughout the season. It would be equivalent to a set ranking for role priority. Another option is to only weigh in games where the player spends the majority of the time with common linemates. Lines can be determined by a graph constructed from $$\delta$$. Let an edge $${i,j}$$ exist if $$\delta[i,j]$$ and $$\delta[j,i]$$ are greater than some threshold. Whittle down the threshold until you like what you see. Then all disconnected components which are triangles form F lines, all arcs form D pairs. For extra measure, restrict labels to avoid conflicts within each component.
 
 ![](../../assets/images/tor_d_odds_dist.jpg)
-*Histogram of log odds for 4 prominent members of Toronto's Defence. Notice Morgan Rielly, who I contest played every game as LD strictly due to seniority, has some games suggesting otherwise. His partner for most of the year, TJ Brodie plays a flex role but indulges in the left side whenever the pair is split.*
+*Histogram of log odds for 4 prominent members of Toronto's Defence. Notice Morgan Rielly, who I contest played every game as LD strictly due to seniority, has some games suggesting otherwise. His partner for most of the year, TJ Brodie is flexible but indulges in the left side whenever the pair is split.*
 
-Let's compare the results Toronto's defence with and without aggregating. I prefer the latter, which exhibits a cleaner separation at the cost of paving over any intricacies. 
+Let's compare the results Toronto's defence with and without aggregating. I prefer the latter, which exhibits a cleaner separation at the cost of paving over any edge cases. 
 
 <table>
    <tr>
@@ -683,9 +683,9 @@ As for the entire league, 36229 out of 47208 come to a concensus for all three o
 
 ## Concluding Remarks
 
-There remains a lot to be tinkered with. Adding penalties, separating wrap-arounds or other secondary types from shots, partitioning the rink's grid by zone before smoothing, possibly some more denoising... I suspect most to be fruitless. The main sticking point is distilling winger labels. Diminishing the additive smoothing or pushing the KDE to produce more discriminative ratios leads to similar yet murky results. Forwards tend to cross over the $$y = 0$$ line enough to require more spatial sampling for consistency. The only way I've found to overcome this is by feeding season data into the single game strength terms, in perhaps the most unprincipled manner. I subsist this provides close to ideal results without manual inspection. It seems adequate if your goal is to get positional eligibility status for fantasy hockey.
+There remains a lot to be tinkered with. Adding penalties, separating wrap-arounds or other secondary types from shots, partitioning the rink's grid by zone before smoothing, possibly some more denoising... I suspect most to be fruitless. The main sticking point is distilling winger labels. Diminishing the additive smoothing or pushing the KDE to produce more discriminative ratios leads to similar yet murky results. Forwards tend to cross over the $$y = 0$$ line enough to require more spatial sampling for consistency. The only way I've found to overcome this is by feeding season data into the single game strength terms, in perhaps the most unprincipled manner (please feel free to lecture me on my bad behaviour). I subsist this provides close to ideal results without manual inspection. It seems adequate if your goal is to get positional eligibility status for fantasy hockey. Keep scrolling down for results.
 
-You can reach me on twitter @yimmymcbill if you have suggestions!  
+You can reach me on twitter @yimmymcbill if you have suggestions, there is certainly room for improvement! 
 
 I've provided a summary for each team in the links below.
 

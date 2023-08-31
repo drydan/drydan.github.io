@@ -1,0 +1,40 @@
+---
+title: "Introduction To RAPM Models"
+date: "2023-08-28"
+---
+
+After wrangling and cleaning some hockey data it's time to think about your first project. A lot of people get into sports analytics as a means to exploit some overlooked setting in their friend's casual fantasy hockey league (In which case I'd tell them to stop thanking Dom for winning your league if you have 100 transactions over second place). Sometimes it's just a fun way to learn statistics with a dataset that interests you. If you're feeling a bit aimless, it's okay because most end goals require a lot of preliminary work anyways. A typical to do list might look something like this:
+
+1. **Scorekeeper Bias Corrections**
+    + Counts
+    + Locations
+2. **Expected Goals Model**
+3. **Player Evaluation**
+    + Finishing, Play Making
+    + Shot Creation and Supression
+    + xT models
+4. **Your Intended Idea**
+    + Game Predictions
+    + Box Score Predictions
+ 
+I'd recommend not approaching this in sequential order. Adjusting for scorekeeper bias is a necessity for a good xG goals model but it's also a lot more complicated. It's okay to build a weaker xG model for now. As long as we document our concessions we can return to them in the future. 
+
+I think a great place to start is building a Regularized Adjusted Plus Minus (RAPM) Model similar to the one in [link]. Why?
+
++ The paper is a cornerstone in the hockey analytics community. 
++ The outputs can easily be compared against to your assessment of a player, or the player cards floating around twitter.
++ Gets you familiar with both event and shift data sources. Creating the tools to build the design matrix will be useful for the majority of your projects.
++ Ridge regression is cool. Generalized linear models are cool.
++ Most importantly you'll be investigating the underlying processes that generates the data, the assumptions the model makes and how our decisions askew the information provided.
+
+# Regularized Adjusted Plus Minus
+
+If you haven't already, you should read [link] for a detailed description of the model. We will be following a nearly identical set up. 
+
+## Collinearity
+
+## Zero inflated Models
+
+## Simulation Studies
+
+## Players to Watch Next Season

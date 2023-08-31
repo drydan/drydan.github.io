@@ -1,0 +1,7 @@
+---
+title: "My Portfolio"
+page-layout: full
+---
+
+This site is meant to document projects I'm working on and the ones I prefer never to return to.
+If you've reached this page through my twitter, feedback can be directed there.
